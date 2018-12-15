@@ -33,9 +33,7 @@ void account::change_vip(bool newVIPstatus) {vip_ = newVIPstatus;}
 
 void account::print_account()
 {
-	cout<<"Account " << id_ << ": Balance - " << balance_ "\t$ , Account Password - " << pass_ << endl;
-
-
+	cout<<"Account " << id_ << ": Balance - " << balance_ << "\t$ , Account Password - " << pass_ << endl;
 }
 
 
