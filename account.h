@@ -7,8 +7,10 @@
 
 #ifndef HW2_OS_ACCOUNT_H_
 #define HW2_OS_ACCOUNT_H_
+
 #include <iostream>
-#include<stdio.h>
+#include <stdio.h>
+
 using namespace std;
 
 class account {

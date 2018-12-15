@@ -11,10 +11,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <map>
 #include "account.h"
 class bank;
 #include "ATM.h"
-#include <map>
+
 #define NUM_BANK_OPS 2
 
 class bank {
@@ -22,8 +23,8 @@ class bank {
 public:
 	bank(int);
 	~bank();
-	void* print_bank(void*);
-	void* take_commisions(void*);
+	void print_bank();
+	void take_commisions();
 	friend ATM;
 	pATM get_atm(int index);
 	pthread_t* get_thread(bool);

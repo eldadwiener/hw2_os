@@ -182,11 +182,8 @@ void ATM::move_money(bank* the_bank,int src_id, int pass , int dest_id, int amou
 	}
 }
 
-void* ATM::atm_run(void* arg)
+void ATM::atm_run(bank* the_bank, char*  atm_file)
 {
-	ATM_data* atm_data = (ATM_data*)arg;
-	bank* the_bank = atm_data->pBank;
-	char* atm_file = atm_data->file;
 	ifstream myfile;
 	myfile.open(atm_file);
 	string line;
@@ -236,6 +233,5 @@ void* ATM::atm_run(void* arg)
 			cout <<"input invalid" << endl;
 		}
 	}
-	pthread_exit(NULL);
 }
 

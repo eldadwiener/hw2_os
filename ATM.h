@@ -9,10 +9,9 @@
 #define HW2_OS_ATM_H_
 
 #include <fstream>
-
-#include "account.h"
 #include <string.h>
 #include <vector>
+#include "account.h"
 
 class ATM_data;
 class ATM;
@@ -26,7 +25,7 @@ public:
 	pthread_t* get_pthread();
 	int get_thread_id();
 	void set_id(int);
-	void* atm_run(void*);
+	void atm_run(bank*, char*);
 private:
 	pthread_t atm_thread;
 	int thread_id;
@@ -45,6 +44,7 @@ class ATM_data {
 public:
 	char* file;
 	bank* pBank;
+	pATM atmP;
 };
 
 

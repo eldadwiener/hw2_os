@@ -52,7 +52,7 @@ pthread_t* bank::get_thread(bool index)
 
 
 
-void* bank::print_bank(void* a)
+void bank::print_bank()
 {
 	map<int,account*>::iterator itr;
 	while(true)
@@ -72,7 +72,7 @@ void* bank::print_bank(void* a)
 }
 
 
-void* bank::take_commisions(void* a)
+void bank::take_commisions()
 {
 	map<int,account*>::iterator itr;
 	while(true)
