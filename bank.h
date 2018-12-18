@@ -8,12 +8,14 @@
 #ifndef HW2_OS_BANK_H_
 #define HW2_OS_BANK_H_
 
-#include <unistd.h>
 #include <stdlib.h>
+<<<<<<< HEAD
+=======
 #include <pthread.h>
 #include <map>
 #include "account.h"
 class bank;
+>>>>>>> ddf5d575177b567f76b3fa2f911b7716219d9522
 #include "ATM.h"
 
 #define NUM_BANK_OPS 2
@@ -31,14 +33,11 @@ public:
 private:
 	int bank_balance_;
 	int num_of_ATMs_;
-	ofstream log_file_;
-	pthread_t* back_op_thr[NUM_BANK_OPS];
-	map <int,account*> acc_map_;
-	pATM* atm_arr;//arr of pATM'
+	pthread_t back_op_thr[NUM_BANK_OPS];
+	pATM* atm_arr; //arr of pATM'
 public:
-	ATM_data** ATM_data_arr;
+	//ATM_data** ATM_data_arr;
+	bank_accounts accounts_map;
 };
-
-
 
 #endif /* HW2_OS_BANK_H_ */

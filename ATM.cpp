@@ -5,39 +5,19 @@
  *      Author: compm
  */
 
-
 #include "ATM.h"
 #include <cstring>
-ATM::ATM():
-	atm_thread(NULL),
-	thread_id(0)
-	{}
-
-pthread_t* ATM::get_pthread()
-{
-	return &(atm_thread);
+ATM::ATM() :
+		thread_id(0), atm_thread(0) {
 }
 
-
-void ATM::new_acc(bank* the_bank ,int id,int pass, unsigned int balance)
-{
-	account* tempAcc = new account(id,pass,balance);
-	map<int,account*>::iterator itr = the_bank->acc_map_.begin();
-	itr = the_bank->acc_map_.find(id);
-	if (itr != the_bank->acc_map_.end())
-	{
-		delete tempAcc;
-		the_bank->log_file_ << "Error "<< thread_id <<
-				": Your transaction failed – account with the same id exists" << endl;
-	}
-	else
-	{
-		the_bank->acc_map_.insert(itr,pair<int,account*> (id,tempAcc));
-		the_bank->log_file_ << thread_id <<": New account id is "<< id <<
-				" with password "<< pass << " and initial balance " << balance << endl;
-	}
+pthread_t* ATM::get_pthread() {
+	return &atm_thread;
 }
 
+<<<<<<< HEAD
+void ATM::atm_run(bank_accounts* accounts_map, string atm_file) {
+=======
 void ATM::make_vip(bank* the_bank,int id, int pass)
 {
 	map<int,account*>::iterator itr	= the_bank->acc_map_.find(id);
@@ -184,54 +164,41 @@ void ATM::move_money(bank* the_bank,int src_id, int pass , int dest_id, int amou
 
 void ATM::atm_run(bank* the_bank, char*  atm_file)
 {
+>>>>>>> ddf5d575177b567f76b3fa2f911b7716219d9522
 	ifstream myfile;
-	myfile.open(atm_file);
+	myfile.open(atm_file.c_str(), std::ifstream::in);
 	string line;
-	vector<string> tokens;
+	vector < string > tokens;
+	while (getline(myfile, line)) {
+		sleep(3); //DEBUG fix to 0.1
+		stringstream ss(line);
+		while (getline(ss, line, ' ')) {
+			tokens.push_back(line);
+		}
+		if (*tokens[0].c_str() == 'O') {
+			accounts_map->new_acc(thread_id, tokens[1],
+					atoi(tokens[2], atoi(tokens[3].c_str()));
+		} else if (*tokens[0].c_str() == 'L') {
+			accounts_map->make_vip(thread_id, atoi(tokens[1].c_str()),
+					atoi(tokens[2].c_str()));
+		} else if (*tokens[0].c_str() == 'D') {
+			accounts_map->deposit(thread_id, atoi(tokens[1].c_str()),
+					atoi(tokens[2].c_str()), atoi(tokens[3].c_str()));
+		} else if (*tokens[0].c_str() == 'W') {
 
-	while(getline(myfile,line))
-	{
+			accounts_map->withdraw(thread_id, atoi(tokens[1].c_str()),
+					atoi(tokens[2].c_str()), atoi(tokens[3].c_str()));
+		} else if (*tokens[0].c_str() == 'B') {
+			accounts_map->check_balance(thread_id, atoi(tokens[1].c_str()),
+					atoi(tokens[2].c_str()));
+		} else if (*tokens[0].c_str() == 'T') {
+			accounts_map->move_money(thread_id, atoi(tokens[1].c_str()),
+					atoi(tokens[2].c_str()), atoi(tokens[3].c_str()),
+					atoi(tokens[4].c_str()));
+		} else {
+			cout << "input invalid" << endl;
+		}
 		tokens.clear();
-		string args;
-		char* temp;
-		strcpy(temp, line.c_str());
-		char* cmd = strtok(temp," /t");
-		while(cmd !=  NULL)
-		{
-			tokens.push_back(cmd);
-			cmd = strtok(temp," /t");
-		}
-		if (*tokens[0].c_str() == 'O')
-		{
-			new_acc(the_bank,atoi(tokens[1].c_str()),atoi(tokens[2].c_str()),atoi(tokens[3].c_str()));
-		}
-		else if (*tokens[0].c_str() == 'L')
-		{
-			make_vip(the_bank,atoi(tokens[1].c_str()),atoi(tokens[2].c_str()));
-		}
-		else if (*tokens[0].c_str() == 'D')
-		{
-			deposit(the_bank,atoi(tokens[1].c_str()),atoi(tokens[2].c_str()),atoi(tokens[3].c_str()));
-		}
-		else if (*tokens[0].c_str() == 'W')
-		{
-
-			withdraw(the_bank,atoi(tokens[1].c_str()),atoi(tokens[2].c_str()),atoi(tokens[3].c_str()));
-		}
-		else if (*tokens[0].c_str() == 'B')
-		{
-			check_balance(the_bank,atoi(tokens[1].c_str()),atoi(tokens[2].c_str()));
-		}
-		else if (*tokens[0].c_str() == 'T')
-		{
-
-			move_money(the_bank,atoi(tokens[1].c_str()),atoi(tokens[2].c_str()),
-					atoi(tokens[3].c_str()),atoi(tokens[4].c_str()));
-		}
-		else
-		{
-			cout <<"input invalid" << endl;
-		}
 	}
 }
 

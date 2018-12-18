@@ -13,10 +13,12 @@
 
 using namespace std;
 
+extern ofstream log_file_;
+
 class account {
 
 public:
-	account(int,int,unsigned int);
+	account(int, int, unsigned int);
 	int get_id();
 	int get_pass();
 	unsigned int get_balance();
@@ -31,6 +33,5 @@ private:
 	unsigned int balance_;
 	bool vip_;
 };
-
 
 #endif /* HW2_OS_ACCOUNT_H_ */
