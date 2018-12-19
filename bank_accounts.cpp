@@ -7,6 +7,43 @@
 #include "bank_accounts.h"
 #define MIN_FEE 2
 
+void bank_accounts::W_lock(string id)
+{
+	map<string, ReadWriteMutex*>::iterator itr = mutexs_map_.find(id);
+	pthread_mutex_lock(&itr->second->write_mutex);
+}
+void bank_accounts::R_lock(string id)
+{
+	map<string, ReadWriteMutex*>::iterator itr = mutexs_map_.find(id);
+	pthread_mutex_lock(&itr->second->read_mutex);
+	if (itr->second->Rcounter == 0)
+	{
+		pthread_mutex_lock(&itr->second->write_mutex);
+		(itr->second->Rcounter)++;
+	}
+	pthread_mutex_unlock(&itr->second->read_mutex);
+}
+
+void bank_accounts::W_unlock(string id)
+{
+	map<string, ReadWriteMutex*>::iterator itr = mutexs_map_.find(id);
+	pthread_mutex_unlock(&itr->second->write_mutex);
+}
+void bank_accounts::R_unlock(string id)
+{
+	map<string, ReadWriteMutex*>::iterator itr = mutexs_map_.find(id);
+	pthread_mutex_lock(&itr->second->read_mutex);
+	if (itr->second->Rcounter == 1)
+	{
+		(itr->second->Rcounter)--;
+		pthread_mutex_unlock(&itr->second->write_mutex);
+
+	}
+	pthread_mutex_unlock(&itr->second->read_mutex);
+}
+
+
+
 
 bank_accounts::bank_accounts()/*:log_file_("log.txt", ofstream::out)*/
 {
@@ -16,12 +53,16 @@ bank_accounts::bank_accounts()/*:log_file_("log.txt", ofstream::out)*/
 
 void bank_accounts::new_acc(int thread_id, string id, string pass, unsigned int balance)
 {
-	account* tempAcc = new account(id, pass, balance);
+	sleep(1);
+	account* tempAcc = new account(id, pass, balance);//DEBUG delete at the end
+	ReadWriteMutex* tempWRM = new ReadWriteMutex;
 	pair<map<string, account*>::iterator, bool> ret;
 	ret = acc_map_.insert(pair<string, account*>(id, tempAcc));
+	mutexs_map_.insert(pair<string, ReadWriteMutex*>(id, tempWRM));
 	pthread_mutex_lock(&logmutex);
 	if (ret.second == false) {
 		delete tempAcc;
+		delete tempWRM;
 		cout << "Error " << thread_id
 				<< ": Your transaction failed – account with the same id exists"
 				<< endl;
@@ -46,8 +87,12 @@ void bank_accounts::make_vip(int thread_id, string id, string pass) {
 				<< ": Your transaction failed – password for account id " << id
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
-	} else {
-		itr->second->change_vip(true);
+	} else
+	{
+		W_lock(id);
+		sleep(1);
+		itr->second->change_vip(true);//WRITE
+		W_unlock(id);
 	}
 }
 
@@ -66,8 +111,11 @@ void bank_accounts::deposit(int thread_id, string id, string pass, int amount) {
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else {
-		int newBalance = itr->second->get_balance() + amount;
-		itr->second->change_balance(newBalance);
+		W_lock(id);
+		sleep(1);
+		int newBalance = itr->second->get_balance() + amount;//READ2WRITE
+		itr->second->change_balance(newBalance);//WRITE
+		W_unlock(id);
 		pthread_mutex_lock(&logmutex);
 		cout << thread_id << ": Account " << id << " new balance is "
 				<< newBalance << " after " << amount
@@ -91,9 +139,12 @@ void bank_accounts::withdraw(int thread_id, string id, string pass, int amount) 
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else {
-		int newBalance = itr->second->get_balance() - amount;//READ
+		W_lock(id);
+		sleep(1);
+		int newBalance = itr->second->get_balance() - amount;//READ2WRITE
 		if (newBalance < 0)
 		{
+			W_unlock(id);
 			pthread_mutex_lock(&logmutex);
 			cout << "Error " << thread_id
 					<< ": Your transaction failed – account id " << id
@@ -102,6 +153,7 @@ void bank_accounts::withdraw(int thread_id, string id, string pass, int amount) 
 		}
 		else { //good- give him money
 			itr->second->change_balance(newBalance);//WRITE
+			W_unlock(id);
 			pthread_mutex_lock(&logmutex);
 			cout << thread_id << ": Account " << id << " new balance is "
 					<< newBalance << " after " << amount
@@ -126,7 +178,10 @@ void bank_accounts::check_balance(int thread_id, string id, string pass) {
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else {
+		R_lock(id);
+		sleep(1);
 		int balance = itr->second->get_balance();//READ
+		R_unlock(id);
 		pthread_mutex_lock(&logmutex);
 		cout << thread_id << ": Account " << id << " balance is "
 				<< balance << endl;
@@ -159,9 +214,11 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 	}
 	else
 	{
-		int newBalance_s = itr_s->second->get_balance() - amount;//READ
+		W_lock(src_id);
+		int newBalance_s = itr_s->second->get_balance() - amount;//READ2WRITE1
 		if (newBalance_s < 0)
 		{ //not eanogh money
+			W_unlock(src_id);
 			pthread_mutex_lock(&logmutex);
 			cout << "Error " << thread_id
 					<< ": Your transaction failed – account id " << src_id
@@ -170,9 +227,13 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 		}
 		else
 		{ //good- transfer him the money
-			itr_s->second->change_balance(newBalance_s);//WRITE
-			int newBalance_d = itr_d->second->get_balance() + amount;//READ
-			itr_d->second->change_balance(newBalance_d);//WRITE
+			itr_s->second->change_balance(newBalance_s);//WRITE1
+			W_unlock(src_id);
+			W_lock(dest_id);
+			sleep(1);
+			int newBalance_d = itr_d->second->get_balance() + amount;//READ2WRITE2
+			itr_d->second->change_balance(newBalance_d);//WRITE2
+			W_unlock(dest_id);
 			pthread_mutex_lock(&logmutex);
 			cout << thread_id << ": Transfer " << amount << " from account "
 					<< src_id << " to account " << dest_id << " new account "
@@ -190,20 +251,28 @@ int bank_accounts::take_commisions()
 	itr = acc_map_.begin();
 	int total_commis =0;
 	while (itr != acc_map_.end())
-	{
+	{//READ2WRITE
+		W_lock(itr->second->get_id());
 		if (!itr->second->get_vip())
 		{ //no vip here
 			string acc_id = itr->first;
 			double fee_percent = MIN_FEE*(1 + ((double) rand() / (double) RAND_MAX));
-			int bal = itr->second->get_balance();//READ
+			int bal = itr->second->get_balance();//READ2WRITE
 			int commis = (bal * (fee_percent / 100)) + 0.5; //round to the closest int
 			itr->second->change_balance(bal - commis);//WRITE
+
+			W_unlock(itr->second->get_id());
+
 			total_commis += commis;
 			pthread_mutex_lock(&logmutex);
 			cout << "Bank: commissions of " << fee_percent
 					<< " % were charged, the bank gained " << commis
 					<< " $ from account " << acc_id << endl;
 			pthread_mutex_unlock(&logmutex);
+		}
+		else
+		{
+			W_unlock(itr->second->get_id());//unlock
 		}
 		itr++;
 	}
@@ -215,7 +284,9 @@ void bank_accounts::print_accounts()
 	map<string, account*>::iterator itr;
 	itr = acc_map_.begin();
 	while (itr != acc_map_.end()) {
-		itr->second->print_account();
+		R_lock(itr->second->get_id());
+		itr->second->print_account();//READ
+		R_unlock(itr->second->get_id());
 		itr++;
 	}
 }

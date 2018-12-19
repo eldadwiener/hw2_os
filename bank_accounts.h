@@ -11,11 +11,11 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <fstream>
-#include "account.h"
+#include <unistd.h>
 #include <map>
+#include "account.h"
 
-//pthread_mutex_lock(&logmutex);
-//pthread_mutex_unlock(&logmutex);
+class ReadWriteMutex;
 
 class bank_accounts {
 public:
@@ -33,6 +33,26 @@ private:
 	//ofstream log_file_;
 	pthread_mutex_t logmutex;
 	map<string, account*> acc_map_;
+	map<string,ReadWriteMutex*> mutexs_map_;
+	void W_lock(string);
+	void R_lock(string);
+	void W_unlock(string);
+	void R_unlock(string);
 };
+
+class ReadWriteMutex
+{
+public:
+	ReadWriteMutex():Rcounter(0)
+	{
+		pthread_mutex_init(&read_mutex, NULL);
+		pthread_mutex_init(&write_mutex, NULL);
+	};
+	int Rcounter;
+	pthread_mutex_t read_mutex;
+	pthread_mutex_t write_mutex;
+
+};
+
 
 #endif /* BANK_ACCOUNTS_H_ */

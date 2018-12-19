@@ -12,7 +12,6 @@
 #include <sstream>
 #include <vector>
 #include <stdlib.h>
-#include <unistd.h>
 #include "bank_accounts.h"
 
 class ATM;
