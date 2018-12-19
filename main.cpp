@@ -11,7 +11,6 @@ void* atm_run(void*);
 void* take_commisions(void*);
 void* print_bank(void*);
 
-ofstream log_file_("log.txt", ofstream::out);
 
 int main(int argc, char* argv[]) {
 	int num_of_ATMS = atoi(argv[1]);
@@ -36,7 +35,6 @@ int main(int argc, char* argv[]) {
 		pATM curr_atm = the_bank.get_atm(i);
 		pthread_join(*curr_atm->get_pthread(), NULL);
 	}
-	log_file_.close();
 	return EXIT_SUCCESS;
 }
 

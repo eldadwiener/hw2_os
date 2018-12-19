@@ -8,7 +8,8 @@
 #include "bank.h"
 
 bank::bank(int num_of_ATMs) :
-		bank_balance_(0), num_of_ATMs_(num_of_ATMs) {
+		bank_balance_(0), num_of_ATMs_(num_of_ATMs)
+{
 	atm_arr = new pATM[num_of_ATMs_];
 	for (int i = 0; i < num_of_ATMs_; i++) {
 		atm_arr[i] = new ATM;
@@ -24,7 +25,7 @@ pATM bank::get_atm(int index)
 
 {
 	if ((index >= num_of_ATMs_) || (index < 0)) { //might change error handling
-		printf("invalid atm_\n");
+		printf("invalid atm_\n");//DEBUG
 		return NULL;
 	} else {
 		return atm_arr[index];

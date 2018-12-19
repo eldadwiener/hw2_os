@@ -8,8 +8,6 @@
 #ifndef HW2_OS_ATM_H_
 #define HW2_OS_ATM_H_
 
-#include <pthread.h>
-#include <fstream>
 #include <string.h>
 #include <sstream>
 #include <vector>
