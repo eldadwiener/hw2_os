@@ -6,15 +6,14 @@
  */
 #include "account.h"
 
-account::account(int id, int pass, unsigned int balance) :
-		id_(id), pass_(pass), balance_(balance), vip_(false) {
-}
+account::account(string id, string pass, unsigned int balance) :
+		id_(id), pass_(pass), balance_(balance), vip_(false) {}
 
-int account::get_id() {
+string account::get_id() {
 	return id_;
 }
 
-int account::get_pass() {
+string account::get_pass() {
 	return pass_;
 }
 

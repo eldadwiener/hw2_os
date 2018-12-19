@@ -5,26 +5,27 @@
  *      Author: compm
  */
 #include "bank_accounts.h"
+#define MIN_FEE 2
 
-void bank_accounts::new_acc(int thread_id, int id, int pass,
-		unsigned int balance) {
+
+void bank_accounts::new_acc(int thread_id, string id, string pass, unsigned int balance)
+{
 	account* tempAcc = new account(id, pass, balance);
-	map<int, account*>::iterator itr = acc_map_.begin();
-	itr = acc_map_.find(id);
-	if (itr != acc_map_.end()) {
+	pair<map<string, account*>::iterator, bool> ret;
+	ret = acc_map_.insert(pair<string, account*>(id, tempAcc));
+	if (ret.second == false) {
 		delete tempAcc;
 		cout << "Error " << thread_id
 				<< ": Your transaction failed – account with the same id exists"
 				<< endl;
 	} else {
-		acc_map_.insert(itr, pair<int, account*>(id, tempAcc));
 		cout << thread_id << ": New account id is " << id << " with password "
 				<< pass << " and initial balance " << balance << endl;
 	}
 }
 
-void bank_accounts::make_vip(int thread_id, int id, int pass) {
-	map<int, account*>::iterator itr = acc_map_.find(id);
+void bank_accounts::make_vip(int thread_id, string id, string pass) {
+	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		cout << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
@@ -38,8 +39,8 @@ void bank_accounts::make_vip(int thread_id, int id, int pass) {
 	}
 }
 
-void bank_accounts::deposit(int thread_id, int id, int pass, int amount) {
-	map<int, account*>::iterator itr = acc_map_.find(id);
+void bank_accounts::deposit(int thread_id, string id, string pass, int amount) {
+	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		cout << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
@@ -57,8 +58,8 @@ void bank_accounts::deposit(int thread_id, int id, int pass, int amount) {
 	}
 }
 
-void bank_accounts::withdraw(int thread_id, int id, int pass, int amount) {
-	map<int, account*>::iterator itr = acc_map_.find(id);
+void bank_accounts::withdraw(int thread_id, string id, string pass, int amount) {
+	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		cout << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
@@ -81,8 +82,8 @@ void bank_accounts::withdraw(int thread_id, int id, int pass, int amount) {
 	}
 }
 
-void bank_accounts::check_balance(int thread_id, int id, int pass) {
-	map<int, account*>::iterator itr = acc_map_.find(id);
+void bank_accounts::check_balance(int thread_id, string id, string pass) {
+	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		cout << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
@@ -97,10 +98,10 @@ void bank_accounts::check_balance(int thread_id, int id, int pass) {
 	}
 }
 
-void bank_accounts::move_money(int thread_id, int src_id, int pass, int dest_id,
+void bank_accounts::move_money(int thread_id, string src_id, string pass, string dest_id,
 		int amount) {
-	map<int, account*>::iterator itr_s = acc_map_.find(src_id);
-	map<int, account*>::iterator itr_d = acc_map_.find(dest_id);
+	map<string, account*>::iterator itr_s = acc_map_.find(src_id);
+	map<string, account*>::iterator itr_d = acc_map_.find(dest_id);
 	if ((itr_s == acc_map_.end())) { //src account dosnt exist
 		cout << "Error " << thread_id
 				<< ": Your transaction failed – account id " << src_id
@@ -131,4 +132,42 @@ void bank_accounts::move_money(int thread_id, int src_id, int pass, int dest_id,
 		}
 	}
 }
+
+void bank_accounts::print_accounts()
+{
+	map<string, account*>::iterator itr;
+	itr = acc_map_.begin();
+	while (itr != acc_map_.end()) {
+		itr->second->print_account();
+		itr++;
+	}
+}
+
+int bank_accounts::take_commisions()
+{
+	map<string, account*>::iterator itr;
+	itr = acc_map_.begin();
+	int total_commis =0;
+	while (itr != acc_map_.end())
+	{
+		if (!itr->second->get_vip())
+		{ //no vip here
+			int bal = itr->second->get_balance();
+			double fee_percent = MIN_FEE*(1 + ((double) rand() / (double) RAND_MAX));
+			int commis = (bal * (fee_percent / 100)) + 0.5; //round to the closest int
+			total_commis += commis;
+			itr->second->change_balance(bal - commis);
+			cout << "Bank: commissions of " << fee_percent
+					<< " % were charged, the bank gained " << commis
+					<< " $ from account " << itr->first << endl;
+		}
+		itr++;
+	}
+	return total_commis;
+}
+
+
+
+
+
 

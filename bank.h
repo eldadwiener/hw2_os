@@ -8,14 +8,6 @@
 #ifndef HW2_OS_BANK_H_
 #define HW2_OS_BANK_H_
 
-#include <stdlib.h>
-<<<<<<< HEAD
-=======
-#include <pthread.h>
-#include <map>
-#include "account.h"
-class bank;
->>>>>>> ddf5d575177b567f76b3fa2f911b7716219d9522
 #include "ATM.h"
 
 #define NUM_BANK_OPS 2
