@@ -6,6 +6,7 @@
  */
 
 #include "bank.h"
+ofstream log_file_("log.txt", ofstream::out);
 
 void* atm_run(void*);
 void* take_commisions(void*);
@@ -35,6 +36,7 @@ int main(int argc, char* argv[]) {
 		pATM curr_atm = the_bank.get_atm(i);
 		pthread_join(*curr_atm->get_pthread(), NULL);
 	}
+	log_file_.close();
 	return EXIT_SUCCESS;
 }
 

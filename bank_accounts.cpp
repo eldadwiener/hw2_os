@@ -16,10 +16,10 @@ void bank_accounts::R_lock(string id)
 {
 	map<string, ReadWriteMutex*>::iterator itr = mutexs_map_.find(id);
 	pthread_mutex_lock(&itr->second->read_mutex);
-	if (itr->second->Rcounter == 0)
+	(itr->second->Rcounter)++;
+	if (itr->second->Rcounter == 1)
 	{
 		pthread_mutex_lock(&itr->second->write_mutex);
-		(itr->second->Rcounter)++;
 	}
 	pthread_mutex_unlock(&itr->second->read_mutex);
 }
@@ -33,9 +33,9 @@ void bank_accounts::R_unlock(string id)
 {
 	map<string, ReadWriteMutex*>::iterator itr = mutexs_map_.find(id);
 	pthread_mutex_lock(&itr->second->read_mutex);
-	if (itr->second->Rcounter == 1)
+	(itr->second->Rcounter)--;
+	if (itr->second->Rcounter == 0)
 	{
-		(itr->second->Rcounter)--;
 		pthread_mutex_unlock(&itr->second->write_mutex);
 
 	}
@@ -63,11 +63,11 @@ void bank_accounts::new_acc(int thread_id, string id, string pass, unsigned int 
 	if (ret.second == false) {
 		delete tempAcc;
 		delete tempWRM;
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – account with the same id exists"
 				<< endl;
 	} else {
-		cout << thread_id << ": New account id is " << id << " with password "
+		log_file_ << thread_id << ": New account id is " << id << " with password "
 				<< pass << " and initial balance " << balance << endl;
 	}
 	pthread_mutex_unlock(&logmutex);
@@ -77,13 +77,13 @@ void bank_accounts::make_vip(int thread_id, string id, string pass) {
 	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
 				<< " does not exist" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else if (itr->second->get_pass() != pass) { //wrong password
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – password for account id " << id
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
@@ -100,13 +100,13 @@ void bank_accounts::deposit(int thread_id, string id, string pass, int amount) {
 	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
 				<< " does not exist" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else if (itr->second->get_pass() != pass) { //wrong password
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – password for account id " << id
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
@@ -117,7 +117,7 @@ void bank_accounts::deposit(int thread_id, string id, string pass, int amount) {
 		itr->second->change_balance(newBalance);//WRITE
 		W_unlock(id);
 		pthread_mutex_lock(&logmutex);
-		cout << thread_id << ": Account " << id << " new balance is "
+		log_file_ << thread_id << ": Account " << id << " new balance is "
 				<< newBalance << " after " << amount
 				<< " $ was deposited" << endl;
 		pthread_mutex_unlock(&logmutex);
@@ -128,13 +128,13 @@ void bank_accounts::withdraw(int thread_id, string id, string pass, int amount) 
 	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
 				<< " does not exist" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else if (itr->second->get_pass() != pass) { //wrong password
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – password for account id " << id
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
@@ -146,7 +146,7 @@ void bank_accounts::withdraw(int thread_id, string id, string pass, int amount) 
 		{
 			W_unlock(id);
 			pthread_mutex_lock(&logmutex);
-			cout << "Error " << thread_id
+			log_file_ << "Error " << thread_id
 					<< ": Your transaction failed – account id " << id
 					<< " balance is lower than " << amount << endl;
 			pthread_mutex_unlock(&logmutex);
@@ -155,7 +155,7 @@ void bank_accounts::withdraw(int thread_id, string id, string pass, int amount) 
 			itr->second->change_balance(newBalance);//WRITE
 			W_unlock(id);
 			pthread_mutex_lock(&logmutex);
-			cout << thread_id << ": Account " << id << " new balance is "
+			log_file_ << thread_id << ": Account " << id << " new balance is "
 					<< newBalance << " after " << amount
 					<< " $ was withdraw" << endl;
 			pthread_mutex_unlock(&logmutex);
@@ -167,13 +167,13 @@ void bank_accounts::check_balance(int thread_id, string id, string pass) {
 	map<string, account*>::iterator itr = acc_map_.find(id);
 	if (itr == acc_map_.end()) { //account dosnt exist
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – account id " << id
 				<< " does not exist" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else if (itr->second->get_pass() != pass) { //wrong password
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – password for account id " << id
 				<< " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
@@ -183,7 +183,7 @@ void bank_accounts::check_balance(int thread_id, string id, string pass) {
 		int balance = itr->second->get_balance();//READ
 		R_unlock(id);
 		pthread_mutex_lock(&logmutex);
-		cout << thread_id << ": Account " << id << " balance is "
+		log_file_ << thread_id << ": Account " << id << " balance is "
 				<< balance << endl;
 		pthread_mutex_unlock(&logmutex);
 	}
@@ -195,19 +195,19 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 	map<string, account*>::iterator itr_d = acc_map_.find(dest_id);
 	if ((itr_s == acc_map_.end())) { //src account dosnt exist
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – account id " << src_id
 				<< " does not exist" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else if (itr_s->second->get_pass() != pass) { //src account wrong password
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – password for account id "
 				<< src_id << " is incorrect" << endl;
 		pthread_mutex_unlock(&logmutex);
 	} else if ((itr_d == acc_map_.end())) { //dest account dosnt exist
 		pthread_mutex_lock(&logmutex);
-		cout << "Error " << thread_id
+		log_file_ << "Error " << thread_id
 				<< ": Your transaction failed – account id " << dest_id
 				<< " does not exist" << endl;
 		pthread_mutex_unlock(&logmutex);
@@ -220,7 +220,7 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 		{ //not eanogh money
 			W_unlock(src_id);
 			pthread_mutex_lock(&logmutex);
-			cout << "Error " << thread_id
+			log_file_ << "Error " << thread_id
 					<< ": Your transaction failed – account id " << src_id
 					<< " balance is lower than " << amount << endl;
 			pthread_mutex_unlock(&logmutex);
@@ -235,7 +235,7 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 			itr_d->second->change_balance(newBalance_d);//WRITE2
 			W_unlock(dest_id);
 			pthread_mutex_lock(&logmutex);
-			cout << thread_id << ": Transfer " << amount << " from account "
+			log_file_ << thread_id << ": Transfer " << amount << " from account "
 					<< src_id << " to account " << dest_id << " new account "
 					<< "balance is " << newBalance_s
 					<< " new target account balance is "
@@ -265,7 +265,7 @@ int bank_accounts::take_commisions()
 
 			total_commis += commis;
 			pthread_mutex_lock(&logmutex);
-			cout << "Bank: commissions of " << fee_percent
+			log_file_ << "Bank: commissions of " << fee_percent
 					<< " % were charged, the bank gained " << commis
 					<< " $ from account " << acc_id << endl;
 			pthread_mutex_unlock(&logmutex);

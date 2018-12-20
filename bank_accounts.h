@@ -16,11 +16,12 @@
 #include "account.h"
 
 class ReadWriteMutex;
+extern ofstream log_file_;
 
 class bank_accounts {
 public:
 	bank_accounts();
-	~bank_accounts() {/*log_file_.close();*/};
+	~bank_accounts() {/*free account and RWM*/};
 	void new_acc(int thread_id, string id, string pass, unsigned int balnace);
 	void make_vip(int thread_id, string id, string pass);
 	void deposit(int thread_id, string id, string pass, int amount);
@@ -30,7 +31,6 @@ public:
 	void print_accounts();
 	int take_commisions();
 private:
-	//ofstream log_file_;
 	pthread_mutex_t logmutex;
 	map<string, account*> acc_map_;
 	map<string,ReadWriteMutex*> mutexs_map_;
