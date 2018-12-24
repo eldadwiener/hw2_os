@@ -17,6 +17,7 @@
 class ATM;
 typedef ATM* pATM;
 
+//extra info at PDF
 class ATM {
 public:
 	ATM();
@@ -33,6 +34,7 @@ private:
 
 };
 
+//contains arguments for thread to run
 class ATM_data {
 public:
 	string file;

@@ -12,23 +12,24 @@
 
 #define NUM_BANK_OPS 2
 
+//extra info at PDF
 class bank {
-
 public:
 	bank(int);
 	~bank();
 	void print_bank();
 	void take_commisions();
 	friend ATM;
+	void end_bank() {end_ = true;};
 	pATM get_atm(int index);
 	pthread_t* get_thread(bool);
 private:
+	bool end_;
 	int bank_balance_;
 	int num_of_ATMs_;
 	pthread_t back_op_thr[NUM_BANK_OPS];
 	pATM* atm_arr; //arr of pATM'
 public:
-	//ATM_data** ATM_data_arr;
 	bank_accounts accounts_map;
 };
 
