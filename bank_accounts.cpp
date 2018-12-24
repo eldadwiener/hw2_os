@@ -357,7 +357,20 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 		}
 		else
 		{//lets try to tranfer
-			W_lock(&itr_s->second->acc_mutexes_);
+			ReadWriteMutex* priorIdMutex;
+			ReadWriteMutex* lastIdMutex;
+			if (src_id < dest_id)
+			{
+				priorIdMutex = &itr_s->second->acc_mutexes_;
+				lastIdMutex = &itr_d->second->acc_mutexes_;
+			}
+			else
+			{
+				priorIdMutex = &itr_d->second->acc_mutexes_;
+				lastIdMutex = &itr_s->second->acc_mutexes_;
+			}
+			W_lock(priorIdMutex);
+			W_lock(lastIdMutex);
 			int newBalance_s = itr_s->second->get_balance() - amount;//READ2WRITE1
 			if (newBalance_s < 0)
 			{ //not eanogh money to tranfer
@@ -367,12 +380,12 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 						<< ": Your transaction failed – account id " << src_id
 						<< " balance is lower than " << amount << endl;
 				pthread_mutex_unlock(&logmutex);
-				W_unlock(&itr_s->second->acc_mutexes_);
+				W_unlock(lastIdMutex);
+				W_unlock(priorIdMutex);
 			}
 			else
 			{ //good- transfer him the money, lock both accounts for the tranfer and print to log
 				itr_s->second->change_balance(newBalance_s);//WRITE1
-				W_lock(&itr_d->second->acc_mutexes_);
 				int newBalance_d = itr_d->second->get_balance() + amount;//READ2WRITE2
 				itr_d->second->change_balance(newBalance_d);//WRITE2
 				pthread_mutex_lock(&logmutex);
@@ -383,8 +396,8 @@ void bank_accounts::move_money(int thread_id, string src_id, string pass, string
 						<< " new target account balance is "
 						<< newBalance_d << endl;
 				pthread_mutex_unlock(&logmutex);
-				W_unlock(&itr_d->second->acc_mutexes_);
-				W_unlock(&itr_s->second->acc_mutexes_);
+				W_unlock(lastIdMutex);
+				W_unlock(priorIdMutex);
 			}
 		}
 	}
@@ -458,11 +471,11 @@ void bank_accounts::print_accounts()
 		itr++;
 	}
 	//release all acocounts after snapshot taken
-	itr = acc_map_.begin();
-	while (itr != acc_map_.end())
+	map<string, account*>::reverse_iterator ritr = acc_map_.rbegin();
+	while (ritr != acc_map_.rend())
 	{
-		R_unlock(&itr->second->acc_mutexes_);
-		itr++;
+		R_unlock(&ritr->second->acc_mutexes_);
+		ritr++;
 	}
 	R_unlock(&map_mutexes_);
 }

@@ -7,13 +7,19 @@
 
 #include "bank.h"
 ofstream log_file_("log.txt", ofstream::out);
-
+bool validity_check(int argc, char* argv[]);
 void* atm_run(void*);
 void* take_commisions(void*);
 void* print_bank(void*);
 
 
 int main(int argc, char* argv[]) {
+	//TODO: add validity check
+	if (!validity_check(argc, argv))
+	{
+		cout << "illegal arguments" << endl;
+		return -1;
+	}
 	//collect the arguments into making threads to run the files
 	int num_of_ATMS = atoi(argv[1]);
 	bank the_bank = bank(num_of_ATMS);
@@ -94,4 +100,23 @@ void* print_bank(void* arg) {
 	the_bank->print_bank();
 	pthread_exit (NULL);
 }
+
+//********************************************
+// function name: validity_check
+// Description: check the validity of the input
+// Parameters:  argc - num of Args from the input
+//				argv - the arguments
+// Returns: void
+//*******************************************
+
+
+bool validity_check(int argc, char* argv[])
+{
+	if ((argc<0)||(atoi(argv[1]) != argc-2))
+	{
+		return false;
+	}
+	return true;
+}
+
 

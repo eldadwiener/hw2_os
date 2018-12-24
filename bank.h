@@ -29,6 +29,7 @@ private:
 	int num_of_ATMs_;
 	pthread_t back_op_thr[NUM_BANK_OPS];
 	pATM* atm_arr; //arr of pATM'
+	pthread_mutex_t Bank_mutex;
 public:
 	bank_accounts accounts_map;
 };

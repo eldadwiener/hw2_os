@@ -17,6 +17,7 @@
 bank::bank(int num_of_ATMs) :
 	end_(false), bank_balance_(0), num_of_ATMs_(num_of_ATMs)
 {
+	pthread_mutex_init(&Bank_mutex, NULL);
 	atm_arr = new pATM[num_of_ATMs_];
 	for (int i = 0; i < num_of_ATMs_; i++) {
 		atm_arr[i] = new ATM;
@@ -83,10 +84,12 @@ void bank::print_bank() {
 		if (usleep(500000)) {
 			perror("sleep failed\n");
 		}
+		pthread_mutex_lock(&Bank_mutex);
 		printf("\033[2J");
 		printf("\033[1;1H");
 		accounts_map.print_accounts();
 		cout << "The Bank has " << bank_balance_ << " $" << endl;
+		pthread_mutex_unlock(&Bank_mutex);
 	}
 }
 
@@ -100,7 +103,11 @@ void bank::take_commisions() {
 		if (sleep(3)) {
 			perror("usleep failed\n");
 		}
-		bank_balance_+= accounts_map.take_commisions();
+
+		int balance= accounts_map.take_commisions();
+		pthread_mutex_lock(&Bank_mutex);
+		bank_balance_+= balance;
+		pthread_mutex_unlock(&Bank_mutex);
 	}
 }
 
